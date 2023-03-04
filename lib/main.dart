@@ -1,6 +1,6 @@
 import 'package:bojpuri/blocs/video_blocs/bloc/video_bloc_bloc.dart';
 import 'package:bojpuri/utils/app_colors.dart';
-import 'package:bojpuri/views/Home_screen,dart.dart';
+import 'package:bojpuri/views/Home_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:sizer/sizer.dart';

@@ -14,3 +14,13 @@ class FetchMoreYoutubeVideos extends VideoBlocEvent {
 }
 
 class GetYoutubeVideos extends VideoBlocEvent {}
+
+class SearchYtSongs extends VideoBlocEvent {
+  final String query;
+  SearchYtSongs({required this.query});
+}
+
+class LoadVideo extends VideoBlocEvent {
+  final CustomVideoModal videoModal;
+  LoadVideo({required this.videoModal});
+}
