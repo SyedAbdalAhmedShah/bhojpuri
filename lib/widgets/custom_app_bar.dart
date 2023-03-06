@@ -81,7 +81,7 @@ class _CustomAppBarState extends State<CustomAppBar> with TickerProviderStateMix
                               },
                               decoration: InputDecoration(
                                 hintText: 'Search...',
-                                hintStyle: TextStyle(fontSize: 10.sp),
+                                hintStyle: TextStyle(fontSize: 14.sp),
                                 border: InputBorder.none,
                               ),
                             ),

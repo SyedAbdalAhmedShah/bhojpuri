@@ -79,6 +79,7 @@ class _HomeScreenState extends State<HomeScreen> {
         return ModalProgressHUD(
           inAsyncCall: state is VideoLoadingState,
           child: Scaffold(
+            appBar: PreferredSize(child: CustomAppBar(), preferredSize: Size(double.infinity, 14.1.h)),
             body: LiquidPullToRefresh(
               key: _refreshIndicatorKey,
               onRefresh: () async {
@@ -91,7 +92,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 padding: EdgeInsets.zero,
                 child: Column(
                   children: [
-                    CustomAppBar(),
                     // VideoCard(
                     //   bloc: _videoBloc,
                     // ),

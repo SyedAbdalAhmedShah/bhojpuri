@@ -15,7 +15,7 @@ class VideoRepository {
       type: ['video', 'songs'],
       pageToken: nextPageToken,
       order: 'relevance',
-      maxResults: 100,
+      maxResults: 50,
     );
 
     final videoIds = searchListResponse.items!.map((item) => item.id!.videoId).toList();
