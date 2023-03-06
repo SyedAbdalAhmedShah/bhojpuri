@@ -7,9 +7,12 @@ class VideoBlocInitial extends VideoBlocState {}
 
 class VideoLoadingState extends VideoBlocState {}
 
+class FetchingMoreVideoLoading extends VideoBlocState {}
+
 class FetchedPaginatedYTVideos extends VideoBlocState {
-  final CustomVideoModal moreVideos;
-  FetchedPaginatedYTVideos({required this.moreVideos});
+  final List<CustomVideoModal> moreVideos;
+  final String nextPageToken;
+  FetchedPaginatedYTVideos({required this.moreVideos, required this.nextPageToken});
 }
 
 class MiniPlayerLaunchedState extends VideoBlocState {
@@ -23,7 +26,8 @@ class MiniPlayerLaunchedState extends VideoBlocState {
 
 class YoutubeVideoState extends VideoBlocState {
   final List<CustomVideoModal> videos;
-  YoutubeVideoState({required this.videos});
+  final String nextPageToken;
+  YoutubeVideoState({required this.videos, required this.nextPageToken});
 }
 
 class PlayVideo extends VideoBlocState {

@@ -3,6 +3,7 @@ import 'package:bojpuri/models/custom_video_model.dart';
 import 'package:bojpuri/views/video_play_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
 import 'package:sizer/sizer.dart';
 import 'package:bojpuri/blocs/video_blocs/bloc/video_bloc_bloc.dart';
 import 'package:bojpuri/utils/app_colors.dart';
@@ -28,6 +29,8 @@ class _HomeScreenState extends State<HomeScreen> {
   List<CustomVideoModal>? videos;
   late VideoBloc _videoBloc;
   bool _isLoading = false;
+  String nextPageToken = '';
+  final GlobalKey<LiquidPullToRefreshState> _refreshIndicatorKey = GlobalKey<LiquidPullToRefreshState>();
 
   @override
   void initState() {
@@ -37,10 +40,13 @@ class _HomeScreenState extends State<HomeScreen> {
     _scrollController.addListener(() {
       if (_scrollController.hasClients) {
         if (_scrollController.position.extentAfter == 0) {
-          setState(() {
-            _isLoading = true;
-          });
-          // _videoBloc.add(FetchMoreYoutubeVideos(nextPageToken: videos?.nextPageToken ?? ""));
+          // setState(() {
+          //   _isLoading = true;
+          // });
+          if (_videoBloc.state is! FetchingMoreVideoLoading) {
+            _videoBloc.add(FetchMoreYoutubeVideos(nextPageToken: nextPageToken));
+          }
+
           print("HIIIIII ");
         }
       }
@@ -56,6 +62,7 @@ class _HomeScreenState extends State<HomeScreen> {
         print("video bloc state $state");
         if (state is YoutubeVideoState) {
           videos = state.videos;
+          nextPageToken = state.nextPageToken;
         } else if (state is MiniPlayerLaunchedState) {
           videos!.removeWhere((element) => element.videoId == state.videoDetail.videoId);
           Navigator.of(context).push(
@@ -64,56 +71,63 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           );
         } else if (state is FetchedPaginatedYTVideos) {
-          // videos?.thumbnail?.addAll(state.moreVideos.thumbnail ?? []);
-          // videos?.videoId?.addAll(state.moreVideos.videoId ?? []);
-          // videos?.videoTitle?.addAll(state.moreVideos.videoTitle ?? []);
-          // videos?.nextPageToken = state.moreVideos.nextPageToken;
-          // videos = CustomVideoModal(thumbnail: videos?.thumbnail?.toSet().toList(), videoId: videos?.videoId?.toSet().toList(), videoTitle: videos?.videoTitle?.toSet().toList());
-          // _isLoading = false;
-          // setState(() {});
+          videos!.addAll(state.moreVideos);
+          nextPageToken = state.nextPageToken;
         }
       },
       builder: (context, state) {
         return ModalProgressHUD(
           inAsyncCall: state is VideoLoadingState,
           child: Scaffold(
-            body: SingleChildScrollView(
-              controller: _scrollController,
-              child: Column(
-                children: [
-                  CustomAppBar(),
-                  // VideoCard(
-                  //   bloc: _videoBloc,
-                  // ),
-                  // const CustomGap(),
-                  // SizedBox(
-                  //   height: 15.h + 2.h + 24.sp,
-                  //   child: ListView.separated(
-                  //       scrollDirection: Axis.horizontal,
-                  //       itemBuilder: (_, index) => Reels(),
-                  //       separatorBuilder: (_, index) => CustomGap(
-                  //             height: 0,
-                  //             width: 2.w,
-                  //           ),
-                  //       itemCount: 10),
-                  // ),
-                  ListView.separated(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemBuilder: (_, index) => InkWell(
-                            onTap: () {
-                              _videoBloc.add(PlayVideoEvent(video: videos![index]));
-                            },
-                            child: VideoCard(
-                              videos: videos!,
-                              index: index,
+            body: LiquidPullToRefresh(
+              key: _refreshIndicatorKey,
+              onRefresh: () async {
+                Future.delayed(Duration(seconds: 1), () => _videoBloc.add(GetYoutubeVideos()));
+              },
+              showChildOpacityTransition: false,
+              // showChild
+              child: SingleChildScrollView(
+                controller: _scrollController,
+                padding: EdgeInsets.zero,
+                child: Column(
+                  children: [
+                    CustomAppBar(),
+                    // VideoCard(
+                    //   bloc: _videoBloc,
+                    // ),
+                    // const CustomGap(),
+                    // SizedBox(
+                    //   height: 15.h + 2.h + 24.sp,
+                    //   child: ListView.separated(
+                    //       scrollDirection: Axis.horizontal,
+                    //       itemBuilder: (_, index) => Reels(),
+                    //       separatorBuilder: (_, index) => CustomGap(
+                    //             height: 0,
+                    //             width: 2.w,
+                    //           ),
+                    //       itemCount: 10),
+                    // ),
+                    ListView.separated(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemBuilder: (_, index) => InkWell(
+                              onTap: () {
+                                _videoBloc.add(PlayVideoEvent(video: videos![index]));
+                              },
+                              child: VideoCard(
+                                videos: videos!,
+                                index: index,
+                              ),
                             ),
-                          ),
-                      separatorBuilder: (_, index) => CustomGap(),
-                      itemCount: videos?.length ?? 0),
-
-                  Visibility(visible: _isLoading, child: SizedBox(height: 20, child: CircularProgressIndicator.adaptive()))
-                ],
+                        separatorBuilder: (_, index) => CustomGap(),
+                        itemCount: videos?.length ?? 0),
+                    CustomGap(),
+                    Visibility(visible: state is FetchingMoreVideoLoading, child: CircularProgressIndicator.adaptive()),
+                    CustomGap(
+                      height: 4.h,
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

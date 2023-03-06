@@ -45,7 +45,7 @@ class VideoBloc extends Bloc<VideoBlocEvent, VideoBlocState> {
         String nextPageToken = mapData[2];
         print('allvideos length ==============> ${allVideos.length}');
         print('token next page  ==============> $nextPageToken');
-        emit(YoutubeVideoState(videos: allVideos));
+        emit(YoutubeVideoState(videos: allVideos, nextPageToken: nextPageToken));
       } catch (error) {
         print('Error $error');
       }
@@ -53,10 +53,13 @@ class VideoBloc extends Bloc<VideoBlocEvent, VideoBlocState> {
 
     on<FetchMoreYoutubeVideos>((event, emit) async {
       try {
+        emit(FetchingMoreVideoLoading());
         print('i am trigger');
-        // CustomVideoModal allvideos = await videoRepository.getTheYTVideos(nextPageToken: event.nextPageToken);
-
-        // emit(FetchedPaginatedYTVideos(moreVideos: allvideos));
+        print('next page token ${event.nextPageToken}');
+        Map mapData = await videoRepository.getTheYTVideos(nextPageToken: event.nextPageToken, searchQuery: Strings.staticYtQuery);
+        List<CustomVideoModal> allVideos = mapData[1];
+        String nextPageToken = mapData[2];
+        emit(FetchedPaginatedYTVideos(nextPageToken: nextPageToken, moreVideos: allVideos));
       } catch (error) {
         print('error occure during fetch more videos $error');
       }
@@ -78,7 +81,7 @@ class VideoBloc extends Bloc<VideoBlocEvent, VideoBlocState> {
         String nextPageToken = mapData[2];
         print('allvideos length ==============> ${allVideos.length}');
         print('token next page  ==============> $nextPageToken');
-        emit(YoutubeVideoState(videos: allVideos));
+        emit(YoutubeVideoState(videos: allVideos, nextPageToken: nextPageToken));
       } catch (error) {
         log('Error occure in search song event $error');
       }

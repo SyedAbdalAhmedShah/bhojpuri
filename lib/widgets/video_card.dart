@@ -1,6 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:googleapis/youtube/v3.dart';
+
 import 'package:sizer/sizer.dart';
 
 import '../models/custom_video_model.dart';
@@ -17,9 +17,9 @@ class VideoCard extends StatelessWidget {
       children: [
         CachedNetworkImage(
           imageUrl: videos[index].thumbnail ?? "",
-          fit: BoxFit.cover,
+          fit: BoxFit.fill,
           width: double.infinity,
-          height: 26.h,
+          height: 28.h,
           placeholder: (context, url) => Center(child: CircularProgressIndicator()),
           errorWidget: (context, url, error) => Icon(Icons.error),
         ),

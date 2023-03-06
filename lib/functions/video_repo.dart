@@ -20,7 +20,10 @@ class VideoRepository {
 
     final videoIds = searchListResponse.items!.map((item) => item.id!.videoId).toList();
 
-    final videoListResponse = await youtubeApi.videos.list(['id,snippet'], id: [videoIds.join(',')], pageToken: nextPageToken);
+    final videoListResponse = await youtubeApi.videos.list(
+      ['id,snippet'],
+      id: [videoIds.join(',')],
+    );
     List<Video>? videos = videoListResponse.items;
     print(videos?.isEmpty);
     print(videos?.length);
