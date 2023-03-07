@@ -1,6 +1,7 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'package:bojpuri/models/custom_video_model.dart';
 import 'package:bojpuri/views/video_play_screen.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
@@ -26,9 +27,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
   TrackingScrollController trackingScrollController = TrackingScrollController();
   ScrollController _scrollController = ScrollController();
-  List<CustomVideoModal>? videos;
+  List<CustomVideoModal>? _videos;
+  List<CustomVideoModal>? _reels;
+  List<CustomVideoModal>? firstVideo;
   late VideoBloc _videoBloc;
-  bool _isLoading = false;
   String nextPageToken = '';
   final GlobalKey<LiquidPullToRefreshState> _refreshIndicatorKey = GlobalKey<LiquidPullToRefreshState>();
 
@@ -61,25 +63,28 @@ class _HomeScreenState extends State<HomeScreen> {
       listener: (context, state) {
         print("video bloc state $state");
         if (state is YoutubeVideoState) {
-          videos = state.videos;
+          _videos = state.videos;
+          firstVideo = state.firstVideo;
+          _reels = state.reels;
           nextPageToken = state.nextPageToken;
         } else if (state is MiniPlayerLaunchedState) {
-          videos!.removeWhere((element) => element.videoId == state.videoDetail.videoId);
+          _videos!.removeWhere((element) => element.videoId == state.videoDetail.videoId);
           Navigator.of(context).push(
             MaterialPageRoute(
-              builder: (_) => VideoPlayScreen(youtubeController: state.youtubeController, videoDetail: state.videoDetail, recomendationVideo: videos!),
+              builder: (_) => VideoPlayScreen(youtubeController: state.youtubeController, videoDetail: state.videoDetail, recomendationVideo: _videos!),
             ),
           );
         } else if (state is FetchedPaginatedYTVideos) {
-          videos!.addAll(state.moreVideos);
+          _videos!.addAll(state.moreVideos);
           nextPageToken = state.nextPageToken;
         }
       },
       builder: (context, state) {
         return ModalProgressHUD(
           inAsyncCall: state is VideoLoadingState,
+          progressIndicator: CircularProgressIndicator.adaptive(),
           child: Scaffold(
-            appBar: PreferredSize(child: CustomAppBar(), preferredSize: Size(double.infinity, 14.1.h)),
+            appBar: PreferredSize(child: CustomAppBar(), preferredSize: Size(double.infinity, kToolbarHeight + 4.h)),
             body: LiquidPullToRefresh(
               key: _refreshIndicatorKey,
               onRefresh: () async {
@@ -92,35 +97,47 @@ class _HomeScreenState extends State<HomeScreen> {
                 padding: EdgeInsets.zero,
                 child: Column(
                   children: [
-                    // VideoCard(
-                    //   bloc: _videoBloc,
-                    // ),
-                    // const CustomGap(),
-                    // SizedBox(
-                    //   height: 15.h + 2.h + 24.sp,
-                    //   child: ListView.separated(
-                    //       scrollDirection: Axis.horizontal,
-                    //       itemBuilder: (_, index) => Reels(),
-                    //       separatorBuilder: (_, index) => CustomGap(
-                    //             height: 0,
-                    //             width: 2.w,
-                    //           ),
-                    //       itemCount: 10),
-                    // ),
+                    if (firstVideo != null)
+                      InkWell(
+                        onTap: () => _videoBloc.add(PlayVideoEvent(video: _videos![0])),
+                        child: VideoCard(
+                          videos: firstVideo ?? [],
+                          index: 0,
+                        ),
+                      ),
+                    const CustomGap(),
+                    SizedBox(
+                      height: 22.h + 2.h + 24.sp,
+                      child: ListView.separated(
+                          scrollDirection: Axis.horizontal,
+                          itemBuilder: (_, index) => InkWell(
+                                onTap: () => _videoBloc.add(PlayVideoEvent(video: _reels![index])),
+                                child: Reels(
+                                  reelsVideo: _reels ?? [],
+                                  index: index,
+                                ),
+                              ),
+                          separatorBuilder: (_, index) => CustomGap(
+                                height: 0,
+                                width: 2.w,
+                              ),
+                          itemCount: _reels?.length ?? 0),
+                    ),
+                    CustomGap(),
                     ListView.separated(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
                         itemBuilder: (_, index) => InkWell(
                               onTap: () {
-                                _videoBloc.add(PlayVideoEvent(video: videos![index]));
+                                _videoBloc.add(PlayVideoEvent(video: _videos![index]));
                               },
                               child: VideoCard(
-                                videos: videos!,
+                                videos: _videos!,
                                 index: index,
                               ),
                             ),
                         separatorBuilder: (_, index) => CustomGap(),
-                        itemCount: videos?.length ?? 0),
+                        itemCount: _videos?.length ?? 0),
                     CustomGap(),
                     Visibility(visible: state is FetchingMoreVideoLoading, child: CircularProgressIndicator.adaptive()),
                     CustomGap(
@@ -138,28 +155,36 @@ class _HomeScreenState extends State<HomeScreen> {
 }
 
 class Reels extends StatelessWidget {
-  const Reels({
-    super.key,
-  });
+  final List<CustomVideoModal> reelsVideo;
+  final int index;
+  const Reels({required this.reelsVideo, required this.index});
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          height: 15.h,
-          width: 50.w,
-          decoration: BoxDecoration(color: Colors.teal, image: DecorationImage(image: AssetImage(Assets.poster), fit: BoxFit.fill)),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8.0),
-          child: Text(
-            "Description",
-            style: Theme.of(context).textTheme.titleMedium!.copyWith(color: Colors.black),
+    return SizedBox(
+      width: 50.w,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          CachedNetworkImage(
+            imageUrl: reelsVideo[index].thumbnail ?? "",
+            fit: BoxFit.fill,
+            height: 15.h + 2.h + 24.sp,
+            width: 50.w,
+            placeholder: (context, url) => Center(child: CircularProgressIndicator.adaptive()),
+            errorWidget: (context, url, error) => Icon(Icons.error),
           ),
-        ),
-      ],
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            child: Text(
+              reelsVideo[index].description ?? "",
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.titleMedium!.copyWith(color: Colors.black),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

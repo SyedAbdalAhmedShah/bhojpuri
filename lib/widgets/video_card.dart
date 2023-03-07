@@ -20,7 +20,7 @@ class VideoCard extends StatelessWidget {
           fit: BoxFit.fill,
           width: double.infinity,
           height: 28.h,
-          placeholder: (context, url) => Center(child: CircularProgressIndicator()),
+          placeholder: (context, url) => Center(child: CircularProgressIndicator.adaptive()),
           errorWidget: (context, url, error) => Icon(Icons.error),
         ),
         Padding(

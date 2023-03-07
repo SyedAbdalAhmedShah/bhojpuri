@@ -43,9 +43,20 @@ class VideoBloc extends Bloc<VideoBlocEvent, VideoBlocState> {
         Map mapData = await videoRepository.getTheYTVideos(searchQuery: Strings.staticYtQuery);
         List<CustomVideoModal> allVideos = mapData[1];
         String nextPageToken = mapData[2];
+
+        List<CustomVideoModal> reels = [];
+        List<CustomVideoModal> firstVideo = [];
+
+        for (var i = 0; i <= 9; i++) {
+          print(i);
+
+          reels.add(allVideos.removeAt(i));
+        }
+        firstVideo.add(allVideos.removeAt(0));
         print('allvideos length ==============> ${allVideos.length}');
+        print('Reels length ==============> ${reels.length}');
         print('token next page  ==============> $nextPageToken');
-        emit(YoutubeVideoState(videos: allVideos, nextPageToken: nextPageToken));
+        emit(YoutubeVideoState(videos: allVideos, reels: reels, nextPageToken: nextPageToken, firstVideo: firstVideo));
       } catch (error) {
         print('Error $error');
       }
@@ -79,9 +90,18 @@ class VideoBloc extends Bloc<VideoBlocEvent, VideoBlocState> {
         Map mapData = await videoRepository.getTheYTVideos(searchQuery: event.query);
         List<CustomVideoModal> allVideos = mapData[1];
         String nextPageToken = mapData[2];
+        List<CustomVideoModal> reels = [];
+        List<CustomVideoModal> firstVideo = [];
+        for (var i = 0; i <= 9; i++) {
+          print(i);
+
+          reels.add(allVideos.removeAt(i));
+        }
         print('allvideos length ==============> ${allVideos.length}');
+        print('Reels length ==============> ${reels.length}');
         print('token next page  ==============> $nextPageToken');
-        emit(YoutubeVideoState(videos: allVideos, nextPageToken: nextPageToken));
+        firstVideo.add(allVideos.removeAt(0));
+        emit(YoutubeVideoState(videos: allVideos, nextPageToken: nextPageToken, reels: reels, firstVideo: firstVideo));
       } catch (error) {
         log('Error occure in search song event $error');
       }

@@ -26,8 +26,10 @@ class MiniPlayerLaunchedState extends VideoBlocState {
 
 class YoutubeVideoState extends VideoBlocState {
   final List<CustomVideoModal> videos;
+  final List<CustomVideoModal>? reels;
+  final List<CustomVideoModal>? firstVideo;
   final String nextPageToken;
-  YoutubeVideoState({required this.videos, required this.nextPageToken});
+  YoutubeVideoState({required this.videos, this.reels, this.firstVideo, required this.nextPageToken});
 }
 
 class PlayVideo extends VideoBlocState {

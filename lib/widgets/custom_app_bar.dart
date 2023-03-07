@@ -18,12 +18,7 @@ class _CustomAppBarState extends State<CustomAppBar> with TickerProviderStateMix
   final TextEditingController _controller = TextEditingController();
   late VideoBloc _videoBloc;
   bool _isExpanded = false;
-
-  void _toggleExpand() {
-    setState(() {
-      _isExpanded = !_isExpanded;
-    });
-  }
+  FocusNode _searchNode = FocusNode();
 
   @override
   void initState() {
@@ -44,73 +39,63 @@ class _CustomAppBarState extends State<CustomAppBar> with TickerProviderStateMix
           // height: 8.h,
           width: 70.w,
         ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8.0),
-          child: Align(
-            alignment: Alignment.centerRight,
-            child: GestureDetector(
-              onTap: _toggleExpand,
-              child: AnimatedContainer(
-                duration: Duration(milliseconds: 500),
-                alignment: Alignment.topLeft,
-                width: _isExpanded ? 70.w : 50,
-                height: 50,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(25),
-                  color: Colors.grey[200],
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    CustomGap(
-                      width: 2.w,
-                    ),
-                    _isExpanded
-                        ? Expanded(
-                            child: TextFormField(
-                              controller: _controller,
-                              onFieldSubmitted: (value) {
-                                if (value.isNotEmpty) {
-                                  _videoBloc.add(SearchYtSongs(query: "${value} bhojpuri "));
-                                  _controller.clear();
-                                } else {
-                                  setState(() {
-                                    _isExpanded = false;
-                                  });
-                                }
-                              },
-                              decoration: InputDecoration(
-                                hintText: 'Search...',
-                                hintStyle: TextStyle(fontSize: 14.sp),
-                                border: InputBorder.none,
-                              ),
-                            ),
-                          )
-                        : SizedBox.shrink(),
-                    InkWell(
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            CustomGap(
+              width: 2.w,
+            ),
+            Expanded(
+              child: TextFormField(
+                focusNode: _searchNode,
+                controller: _controller,
+                onFieldSubmitted: (value) {
+                  if (value.isNotEmpty) {
+                    _videoBloc.add(SearchYtSongs(query: "${value} bhojpuri "));
+                    _controller.clear();
+                  } else {
+                    setState(() {
+                      _isExpanded = false;
+                    });
+                  }
+                },
+                onChanged: (value) => setState(() {}),
+                decoration: InputDecoration(
+                  hintText: 'Search...',
+                  hintStyle: TextStyle(fontSize: 14.sp),
+                  suffixIcon: InkWell(
                       onTap: () {
-                        if (_controller.text.isEmpty && !_isExpanded) {
-                          _toggleExpand();
+                        if (_controller.text.isEmpty) {
+                          _searchNode.requestFocus();
                         } else {
-                          if (_controller.text.isEmpty) {
-                            _toggleExpand();
-                          } else {
-                            _videoBloc.add(SearchYtSongs(query: "${_controller.text} bhojpuri "));
-                          }
+                          _videoBloc.add(SearchYtSongs(query: "${_controller.text} bhojpuri "));
                         }
                       },
-                      child: Padding(
-                        padding: const EdgeInsets.only(right: 8.0),
-                        child: SizedBox(
-                          child: Center(child: Icon(Icons.search)),
-                        ),
-                      ),
-                    ),
-                  ],
+                      child: Icon(Icons.search)),
+                  border: InputBorder.none,
                 ),
               ),
             ),
-          ),
+            // // InkWell(
+            //   onTap: () {
+            //     if (_controller.text.isEmpty && !_isExpanded) {
+            //       _toggleExpand();
+            //     } else {
+            //       if (_controller.text.isEmpty) {
+            //         _toggleExpand();
+            //       } else {
+            //         _videoBloc.add(SearchYtSongs(query: "${_controller.text} bhojpuri "));
+            //       }
+            //     }
+            //   },
+            //   child: Padding(
+            //     padding: const EdgeInsets.only(right: 8.0),
+            //     child: SizedBox(
+            //       child: Center(child: Icon(Icons.search)),
+            //     ),
+            //   ),
+            // ),
+          ],
         ),
         Divider()
       ],
